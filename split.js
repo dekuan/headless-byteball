@@ -1,11 +1,13 @@
 /*jslint node: true */
 'use strict';
 const db = require('byteballcore/db.js');
-
 const COUNT_CHUNKS = 10;
 
+
+
 // finds the largest output on this address and splits it in 10 chunks
-function splitLargestOutput(address, asset){
+function splitLargestOutput(address, asset)
+{
 	let headlessWallet = require('./start.js');
 	console.log("will split the largest output on "+address);
 	createSplitOutputs(address, asset, function(arrOutputs){
@@ -27,7 +29,9 @@ function splitLargestOutput(address, asset){
 	});
 }
 
-function createSplitOutputs(address, asset, handleOutputs){
+
+function createSplitOutputs(address, asset, handleOutputs)
+{
 	let asset_value = asset ? '='+db.escape(asset) : ' IS NULL';
 	db.query("SELECT amount FROM outputs WHERE address=? AND asset "+asset_value+" AND is_spent=0 ORDER BY amount DESC LIMIT 1", [address], function(rows){
 		if (rows.length === 0)
@@ -41,8 +45,10 @@ function createSplitOutputs(address, asset, handleOutputs){
 	});
 }
 
+
 // splits the largest output if it is greater than the 1/10th of the total
-function checkAndSplitLargestOutput(address, asset){
+function checkAndSplitLargestOutput(address, asset)
+{
 	let asset_value = asset ? '='+db.escape(asset) : ' IS NULL';
 	db.query( // see if the largest output is greater than the 1/10th of the total
 		"SELECT COUNT(*) AS count FROM outputs \n\

@@ -1,25 +1,30 @@
 /*jslint node: true */
 "use strict";
-var fs = require('fs');
-var crypto = require('crypto');
-var util = require('util');
-var constants = require('byteballcore/constants.js');
-var conf = require('byteballcore/conf.js');
-var objectHash = require('byteballcore/object_hash.js');
-var desktopApp = require('byteballcore/desktop_app.js');
-var db = require('byteballcore/db.js');
-var eventBus = require('byteballcore/event_bus.js');
-var ecdsaSig = require('byteballcore/signature.js');
-var Mnemonic = require('bitcore-mnemonic');
-var Bitcore = require('bitcore-lib');
-var readline = require('readline');
 
-var appDataDir = desktopApp.getAppDataDir();
-var KEYS_FILENAME = appDataDir + '/' + (conf.KEYS_FILENAME || 'keys.json');
+var fs			= require( 'fs' );
+var crypto		= require( 'crypto' );
+var util		= require( 'util' );
+var constants		= require( 'byteballcore/constants.js' );
+var conf		= require( 'byteballcore/conf.js' );
+var objectHash		= require( 'byteballcore/object_hash.js' );
+var desktopApp		= require( 'byteballcore/desktop_app.js' );
+var db			= require( 'byteballcore/db.js' );
+var eventBus		= require( 'byteballcore/event_bus.js' );
+var ecdsaSig		= require( 'byteballcore/signature.js' );
+var Mnemonic		= require( 'bitcore-mnemonic' );
+var Bitcore		= require( 'bitcore-lib' );
+var readline		= require( 'readline' );
+
+var appDataDir		= desktopApp.getAppDataDir();
+var KEYS_FILENAME	= appDataDir + '/' + ( conf.KEYS_FILENAME || 'keys.json' );
 var wallet_id;
 var xPrivKey;
 
-function replaceConsoleLog(){
+
+
+
+function replaceConsoleLog()
+{
 	var log_filename = conf.LOG_FILENAME || (appDataDir + '/log.txt');
 	var writeStream = fs.createWriteStream(log_filename);
 	console.log('---------------');
@@ -33,47 +38,67 @@ function replaceConsoleLog(){
 	console.info = console.log;
 }
 
-function readKeys(onDone){
+function readKeys(onDone)
+{
 	console.log('-----------------------');
 	if (conf.control_addresses)
 		console.log("remote access allowed from devices: "+conf.control_addresses.join(', '));
 	if (conf.payout_address)
 		console.log("payouts allowed to address: "+conf.payout_address);
 	console.log('-----------------------');
-	fs.readFile(KEYS_FILENAME, 'utf8', function(err, data){
-		var rl = readline.createInterface({
+
+	fs.readFile(KEYS_FILENAME, 'utf8', function(err, data)
+	{
+		var rl = readline.createInterface
+		({
 			input: process.stdin,
 			output: process.stdout,
 			//terminal: true
 		});
-		if (err){ // first start
+		if ( err )
+		{
+			//	first start
 			console.log('failed to read keys, will gen');
 			var suggestedDeviceName = require('os').hostname() || 'Headless';
-			rl.question("Please name this device ["+suggestedDeviceName+"]: ", function(deviceName){
+			rl.question("Please name this device ["+suggestedDeviceName+"]: ", function(deviceName)
+			{
 				if (!deviceName)
 					deviceName = suggestedDeviceName;
+
 				var userConfFile = appDataDir + '/conf.json';
-				fs.writeFile(userConfFile, JSON.stringify({deviceName: deviceName}, null, '\t'), 'utf8', function(err){
+				fs.writeFile( userConfFile, JSON.stringify({deviceName: deviceName}, null, '\t'), 'utf8', function(err)
+				{
 					if (err)
 						throw Error('failed to write conf.json: '+err);
-					rl.question(
+
+					rl.question
+					(
 						'Device name saved to '+userConfFile+', you can edit it later if you like.\n\nPassphrase for your private keys: ',
-						function(passphrase){
+						function( passphrase )
+						{
 							rl.close();
-							if (process.stdout.moveCursor) process.stdout.moveCursor(0, -1);
-							if (process.stdout.clearLine)  process.stdout.clearLine();
+							if (process.stdout.moveCursor)
+								process.stdout.moveCursor(0, -1);
+
+							if (process.stdout.clearLine)
+								process.stdout.clearLine();
+
 							var deviceTempPrivKey = crypto.randomBytes(32);
 							var devicePrevTempPrivKey = crypto.randomBytes(32);
 
 							var mnemonic = new Mnemonic(); // generates new mnemonic
 							while (!Mnemonic.isValid(mnemonic.toString()))
+							{
 								mnemonic = new Mnemonic();
+							}
 
-							writeKeys(mnemonic.phrase, deviceTempPrivKey, devicePrevTempPrivKey, function(){
+							writeKeys( mnemonic.phrase, deviceTempPrivKey, devicePrevTempPrivKey, function()
+							{
 								console.log('keys created');
 								var xPrivKey = mnemonic.toHDPrivateKey(passphrase);
-								createWallet(xPrivKey, function(){
-									onDone(mnemonic.phrase, passphrase, deviceTempPrivKey, devicePrevTempPrivKey);
+								createWallet(xPrivKey, function()
+								{
+									onDone( mnemonic.phrase, passphrase, deviceTempPrivKey, devicePrevTempPrivKey );
 								});
 							});
 						}
@@ -81,21 +106,32 @@ function readKeys(onDone){
 				});
 			});
 		}
-		else{ // 2nd or later start
-			rl.question("Passphrase: ", function(passphrase){
+		else
+		{
+			//	2nd or later start
+			rl.question( "Passphrase: ", function(passphrase)
+			{
 				rl.close();
-				if (process.stdout.moveCursor) process.stdout.moveCursor(0, -1);
-				if (process.stdout.clearLine)  process.stdout.clearLine();
+				if ( process.stdout.moveCursor )
+					process.stdout.moveCursor(0, -1);
+
+				if ( process.stdout.clearLine )
+					process.stdout.clearLine();
+
 				var keys = JSON.parse(data);
 				var deviceTempPrivKey = Buffer(keys.temp_priv_key, 'base64');
 				var devicePrevTempPrivKey = Buffer(keys.prev_temp_priv_key, 'base64');
-				determineIfWalletExists(function(bWalletExists){
+
+				determineIfWalletExists(function(bWalletExists)
+				{
 					if (bWalletExists)
 						onDone(keys.mnemonic_phrase, passphrase, deviceTempPrivKey, devicePrevTempPrivKey);
-					else{
+					else
+					{
 						var mnemonic = new Mnemonic(keys.mnemonic_phrase);
 						var xPrivKey = mnemonic.toHDPrivateKey(passphrase);
-						createWallet(xPrivKey, function(){
+						createWallet(xPrivKey, function()
+						{
 							onDone(keys.mnemonic_phrase, passphrase, deviceTempPrivKey, devicePrevTempPrivKey);
 						});
 					}
@@ -105,13 +141,17 @@ function readKeys(onDone){
 	});
 }
 
-function writeKeys(mnemonic_phrase, deviceTempPrivKey, devicePrevTempPrivKey, onDone){
-	var keys = {
-		mnemonic_phrase: mnemonic_phrase,
-		temp_priv_key: deviceTempPrivKey.toString('base64'),
-		prev_temp_priv_key: devicePrevTempPrivKey.toString('base64')
+function writeKeys( mnemonic_phrase, deviceTempPrivKey, devicePrevTempPrivKey, onDone )
+{
+	var keys =
+	{
+		mnemonic_phrase		: mnemonic_phrase,
+		temp_priv_key		: deviceTempPrivKey.toString('base64'),
+		prev_temp_priv_key	: devicePrevTempPrivKey.toString('base64')
 	};
-	fs.writeFile(KEYS_FILENAME, JSON.stringify(keys, null, '\t'), 'utf8', function(err){
+
+	fs.writeFile( KEYS_FILENAME, JSON.stringify(keys, null, '\t'), 'utf8', function(err)
+	{
 		if (err)
 			throw Error("failed to write keys file");
 		if (onDone)
@@ -198,25 +238,32 @@ function signWithLocalPrivateKey(wallet_id, account, is_change, address_index, t
 	handleSig(ecdsaSig.sign(text_to_sign, privKeyBuf));
 }
 
-var signer = {
-	readSigningPaths: function(conn, address, handleLengthsBySigningPaths){
+var signer =
+{
+	readSigningPaths: function(conn, address, handleLengthsBySigningPaths)
+	{
 		handleLengthsBySigningPaths({r: constants.SIG_LENGTH});
 	},
-	readDefinition: function(conn, address, handleDefinition){
-		conn.query("SELECT definition FROM my_addresses WHERE address=?", [address], function(rows){
+	readDefinition: function(conn, address, handleDefinition)
+	{
+		conn.query( "SELECT definition FROM my_addresses WHERE address=?", [address], function(rows)
+		{
 			if (rows.length !== 1)
 				throw Error("definition not found");
+
 			handleDefinition(null, JSON.parse(rows[0].definition));
 		});
 	},
-	sign: function(objUnsignedUnit, assocPrivatePayloads, address, signing_path, handleSignature){
+	sign: function(objUnsignedUnit, assocPrivatePayloads, address, signing_path, handleSignature)
+	{
 		var buf_to_sign = objectHash.getUnitHashToSign(objUnsignedUnit);
 		db.query(
 			"SELECT wallet, account, is_change, address_index \n\
 			FROM my_addresses JOIN wallets USING(wallet) JOIN wallet_signing_paths USING(wallet) \n\
 			WHERE address=? AND signing_path=?",
 			[address, signing_path],
-			function(rows){
+			function(rows)
+			{
 				if (rows.length !== 1)
 					throw Error(rows.length+" indexes for address "+address+" and signing path "+signing_path);
 				var row = rows[0];
@@ -227,67 +274,6 @@ var signer = {
 		);
 	}
 };
-
-
-if (conf.permanent_pairing_secret)
-	db.query(
-		"INSERT "+db.getIgnore()+" INTO pairing_secrets (pairing_secret, is_permanent, expiry_date) VALUES (?, 1, '2038-01-01')",
-		[conf.permanent_pairing_secret]
-	);
-
-setTimeout(function(){
-	readKeys(function(mnemonic_phrase, passphrase, deviceTempPrivKey, devicePrevTempPrivKey){
-		var saveTempKeys = function(new_temp_key, new_prev_temp_key, onDone){
-			writeKeys(mnemonic_phrase, new_temp_key, new_prev_temp_key, onDone);
-		};
-		var mnemonic = new Mnemonic(mnemonic_phrase);
-		// global
-		xPrivKey = mnemonic.toHDPrivateKey(passphrase);
-		var devicePrivKey = xPrivKey.derive("m/1'").privateKey.bn.toBuffer({size:32});
-		// read the id of the only wallet
-		readSingleWallet(function(wallet){
-			// global
-			wallet_id = wallet;
-			var device = require('byteballcore/device.js');
-			device.setDevicePrivateKey(devicePrivKey);
-			let my_device_address = device.getMyDeviceAddress();
-			db.query("SELECT 1 FROM extended_pubkeys WHERE device_address=?", [my_device_address], function(rows){
-				if (rows.length > 1)
-					throw Error("more than 1 extended_pubkey?");
-				if (rows.length === 0)
-					return setTimeout(function(){
-						console.log('passphrase is incorrect');
-						process.exit(0);
-					}, 1000);
-				require('byteballcore/wallet.js'); // we don't need any of its functions but it listens for hub/* messages
-				device.setTempKeys(deviceTempPrivKey, devicePrevTempPrivKey, saveTempKeys);
-				device.setDeviceName(conf.deviceName);
-				device.setDeviceHub(conf.hub);
-				let my_device_pubkey = device.getMyDevicePubKey();
-				console.log("====== my device address: "+my_device_address);
-				console.log("====== my device pubkey: "+my_device_pubkey);
-				if (conf.permanent_pairing_secret)
-					console.log("====== my pairing code: "+my_device_pubkey+"@"+conf.hub+"#"+conf.permanent_pairing_secret);
-				if (conf.bLight){
-					var light_wallet = require('byteballcore/light_wallet.js');
-					light_wallet.setLightVendorHost(conf.hub);
-				}
-				eventBus.emit('headless_wallet_ready');
-				setTimeout(replaceConsoleLog, 1000);
-				if (conf.MAX_UNSPENT_OUTPUTS && conf.CONSOLIDATION_INTERVAL){
-					var consolidation = require('./consolidation.js');
-					var network = require('byteballcore/network.js');
-					function consolidate(){
-						if (!network.isCatchingUp())
-							consolidation.consolidate(wallet_id, signer);
-					}
-					setInterval(consolidate, conf.CONSOLIDATION_INTERVAL);
-					setTimeout(consolidate, 300*1000);
-				}
-			});
-		});
-	});
-}, 1000);
 
 
 function handlePairing(from_address){
@@ -600,26 +586,120 @@ function setupChatEventHandlers(){
 	});
 }
 
-exports.readSingleWallet = readSingleWallet;
-exports.readSingleAddress = readSingleAddress;
-exports.readFirstAddress = readFirstAddress;
-exports.signer = signer;
-exports.isControlAddress = isControlAddress;
-exports.issueOrSelectNextMainAddress = issueOrSelectNextMainAddress;
-exports.issueNextMainAddress = issueNextMainAddress;
-exports.issueOrSelectAddressByIndex = issueOrSelectAddressByIndex;
-exports.issueOrSelectStaticChangeAddress = issueOrSelectStaticChangeAddress;
-exports.issueChangeAddressAndSendPayment = issueChangeAddressAndSendPayment;
-exports.signMessage = signMessage;
-exports.setupChatEventHandlers = setupChatEventHandlers;
-exports.handlePairing = handlePairing;
-exports.handleText = handleText;
-exports.sendAllBytesFromAddress = sendAllBytesFromAddress;
-exports.sendAssetFromAddress = sendAssetFromAddress;
-exports.sendAllBytes = sendAllBytes;
-exports.sendPaymentUsingOutputs = sendPaymentUsingOutputs;
-exports.sendMultiPayment = sendMultiPayment;
-exports.issueChangeAddressAndSendMultiPayment = issueChangeAddressAndSendMultiPayment;
 
-if (require.main === module)
+
+
+
+if ( conf.permanent_pairing_secret )
+{
+	db.query(
+		"INSERT " + db.getIgnore() + " INTO pairing_secrets (pairing_secret, is_permanent, expiry_date) VALUES (?, 1, '2038-01-01')",
+		[conf.permanent_pairing_secret]
+	);
+}
+
+
+setTimeout(function()
+{
+	readKeys( function( mnemonic_phrase, passphrase, deviceTempPrivKey, devicePrevTempPrivKey )
+	{
+		var saveTempKeys = function(new_temp_key, new_prev_temp_key, onDone)
+		{
+			writeKeys(mnemonic_phrase, new_temp_key, new_prev_temp_key, onDone);
+		};
+
+		var mnemonic = new Mnemonic(mnemonic_phrase);
+		// global
+		xPrivKey = mnemonic.toHDPrivateKey(passphrase);
+
+		var devicePrivKey = xPrivKey.derive("m/1'").privateKey.bn.toBuffer({size:32});
+
+		// read the id of the only wallet
+		readSingleWallet(function(wallet)
+		{
+			// global
+			wallet_id = wallet;
+			var device = require('byteballcore/device.js');
+			device.setDevicePrivateKey(devicePrivKey);
+			let my_device_address = device.getMyDeviceAddress();
+			db.query("SELECT 1 FROM extended_pubkeys WHERE device_address=?", [my_device_address], function(rows)
+			{
+				if (rows.length > 1)
+					throw Error("more than 1 extended_pubkey?");
+				if (rows.length === 0)
+					return setTimeout(function()
+					{
+						console.log('passphrase is incorrect');
+						process.exit(0);
+					}, 1000);
+
+				require('byteballcore/wallet.js'); // we don't need any of its functions but it listens for hub/* messages
+				device.setTempKeys(deviceTempPrivKey, devicePrevTempPrivKey, saveTempKeys);
+				device.setDeviceName(conf.deviceName);
+				device.setDeviceHub(conf.hub);
+
+				let my_device_pubkey = device.getMyDevicePubKey();
+				console.log("====== my device address: "+my_device_address);
+				console.log("====== my device pubkey: "+my_device_pubkey);
+
+				if (conf.permanent_pairing_secret)
+					console.log("====== my pairing code: "+my_device_pubkey+"@"+conf.hub+"#"+conf.permanent_pairing_secret);
+
+				if ( conf.bLight )
+				{
+					var light_wallet = require('byteballcore/light_wallet.js');
+					light_wallet.setLightVendorHost(conf.hub);
+				}
+
+				eventBus.emit('headless_wallet_ready');
+				setTimeout(replaceConsoleLog, 1000);
+
+				if (conf.MAX_UNSPENT_OUTPUTS && conf.CONSOLIDATION_INTERVAL)
+				{
+					var consolidation = require('./consolidation.js');
+					var network = require('byteballcore/network.js');
+					function consolidate()
+					{
+						if ( ! network.isCatchingUp() )
+						{
+							consolidation.consolidate(wallet_id, signer);
+						}
+					}
+
+					setInterval( consolidate, conf.CONSOLIDATION_INTERVAL );
+					setTimeout( consolidate, 300 * 1000 );
+				}
+			});
+		});
+	});
+}, 1000);
+
+
+/**
+ *	@type {readSingleWallet}
+ */
+exports.readSingleWallet			= readSingleWallet;
+exports.readSingleAddress			= readSingleAddress;
+exports.readFirstAddress			= readFirstAddress;
+exports.signer					= signer;
+exports.isControlAddress			= isControlAddress;
+exports.issueOrSelectNextMainAddress		= issueOrSelectNextMainAddress;
+exports.issueNextMainAddress			= issueNextMainAddress;
+exports.issueOrSelectAddressByIndex		= issueOrSelectAddressByIndex;
+exports.issueOrSelectStaticChangeAddress	= issueOrSelectStaticChangeAddress;
+exports.issueChangeAddressAndSendPayment	= issueChangeAddressAndSendPayment;
+exports.signMessage				= signMessage;
+exports.setupChatEventHandlers			= setupChatEventHandlers;
+exports.handlePairing				= handlePairing;
+exports.handleText				= handleText;
+exports.sendAllBytesFromAddress			= sendAllBytesFromAddress;
+exports.sendAssetFromAddress			= sendAssetFromAddress;
+exports.sendAllBytes				= sendAllBytes;
+exports.sendPaymentUsingOutputs			= sendPaymentUsingOutputs;
+exports.sendMultiPayment			= sendMultiPayment;
+exports.issueChangeAddressAndSendMultiPayment	= issueChangeAddressAndSendMultiPayment;
+
+if ( require.main === module )
+{
 	setupChatEventHandlers();
+}
