@@ -4,15 +4,23 @@
 //exports.port		= 6611;
 //exports.myUrl		= 'wss://mydomain.com/bb';
 exports.bServeAsHub	= false;
-exports.bLight		= false;
+exports.bLight		= true;
 
 
-exports.storage		= 'sqlite';
+//exports.storage	= 'sqlite';
+exports.storage		= 'mysql';
+exports.database	=
+	{
+		host		: '127.0.0.1',
+		password	: "byteball",
+		name		: 'byteball',
+		user		: 'byteball'
+	};
 
 
 exports.hub				= 'byteball.org/bb-test';
 exports.deviceName			= 'Headless';
-exports.permanent_pairing_secret	= 'randomstring';
+exports.permanent_pairing_secret	= null;	//	'randomstring';
 exports.control_addresses		= [ 'DEVICE ALLOWED TO CHAT' ];
 exports.payout_address			= 'WHERE THE MONEY CAN BE SENT TO';
 exports.KEYS_FILENAME			= 'keys.json';

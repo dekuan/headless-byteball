@@ -1,8 +1,8 @@
 /*jslint node: true */
 "use strict";
 
-var headlessWallet = require('../start.js');
-var eventBus = require('byteballcore/event_bus.js');
+var headlessWallet	= require( '../start.js' );
+var eventBus		= require( 'byteballcore/event_bus.js' );
 
 
 function onError( err )
@@ -24,12 +24,12 @@ function createPayment()
 		}
 	});
 
-	var from_address	= "PYQJWUWRMUUUSUHKNJWFHSR5OADZMUYR";
-	var payee_address	= "LS3PUAGJ2CEYBKWPODVV72D3IWWBXNXO";
+	var from_address	= "K4XVHLJFHFE6XEMQKEKDVWUA7NZSMMYL";
+	var payee_address	= "RMUEYKKN5B47SKNW7PHAKFQX2W34XPIE";
 	var arrOutputs		=
 	[
 		{ address: from_address, amount: 0 },		//	the change
-		{ address: payee_address, amount: 10000 }	//	the receiver
+		{ address: payee_address, amount: 1 }		//	the receiver
 	];
 	composer.composePaymentJoint( [ from_address ], arrOutputs, headlessWallet.signer, callbacks );
 }
