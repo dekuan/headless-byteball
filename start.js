@@ -563,20 +563,34 @@ function issueOrSelectAddressByIndex(is_change, address_index, handleAddress){
 	});
 }
 
-function issueOrSelectStaticChangeAddress(handleAddress){
-	issueOrSelectAddressByIndex(1, 0, handleAddress);
+
+function issueOrSelectStaticChangeAddress( handleAddress )
+{
+	issueOrSelectAddressByIndex( 1, 0, handleAddress );
 }
 
-function issueChangeAddress(handleAddress){
-	if (conf.bSingleAddress)
-		readSingleAddress(handleAddress);
-	else if (conf.bStaticChangeAddress)
-		issueOrSelectStaticChangeAddress(handleAddress);
-	else{
-		var walletDefinedByKeys = require('byteballcore/wallet_defined_by_keys.js');
-		walletDefinedByKeys.issueOrSelectNextChangeAddress(wallet_id, function(objAddr){
-			handleAddress(objAddr.address);
-		});
+
+function issueChangeAddress( handleAddress )
+{
+	if ( conf.bSingleAddress )
+	{
+		readSingleAddress( handleAddress );
+	}
+	else if ( conf.bStaticChangeAddress )
+	{
+		issueOrSelectStaticChangeAddress( handleAddress );
+	}
+	else
+	{
+		var walletDefinedByKeys	= require( 'byteballcore/wallet_defined_by_keys.js' );
+		walletDefinedByKeys.issueOrSelectNextChangeAddress
+		(
+			wallet_id,
+			function( objAddr )
+			{
+				handleAddress( objAddr.address );
+			}
+		);
 	}
 }
 
@@ -604,23 +618,32 @@ function signMessage( signing_address, message, cb )
 }
 
 
-function handleText(from_address, text, onUnknown){
-	
-	text = text.trim();
-	var fields = text.split(/ /);
-	var command = fields[0].trim().toLowerCase();
-	var params =['',''];
-	if (fields.length > 1) params[0] = fields[1].trim();
-	if (fields.length > 2) params[1] = fields[2].trim();
+function handleText( from_address, text, onUnknown )
+{
+	text	= text.trim();
+	var fields	= text.split(/ /);
+	var command	= fields[ 0 ].trim().toLowerCase();
+	var params	= [ '','' ];
 
-	var walletDefinedByKeys = require('byteballcore/wallet_defined_by_keys.js');
-	var device = require('byteballcore/device.js');
-	switch(command){
-		case 'address':
-			if (conf.bSingleAddress)
-				readSingleAddress(function(address){
-					device.sendMessageToDevice(from_address, 'text', address);
-				});
+	if ( fields.length > 1 )
+		params[0] = fields[1].trim();
+
+	if ( fields.length > 2 )
+		params[1] = fields[2].trim();
+
+	var walletDefinedByKeys	= require( 'byteballcore/wallet_defined_by_keys.js' );
+	var device		= require( 'byteballcore/device.js' );
+	switch( command )
+	{
+		case 'address' :
+			if ( conf.bSingleAddress )
+				readSingleAddress
+				(
+					function( address )
+					{
+						device.sendMessageToDevice( from_address, 'text', address );
+					}
+				);
 			else
 				walletDefinedByKeys.issueOrSelectNextAddress(wallet_id, 0, function(addressInfo){
 					device.sendMessageToDevice(from_address, 'text', addressInfo.address);
