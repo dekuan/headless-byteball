@@ -1,5 +1,7 @@
 .idea/
 conf.js
+isolate-*.log
+
 
 # Coverage directory used by tools like istanbul
 coverage
