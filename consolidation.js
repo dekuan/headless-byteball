@@ -73,7 +73,7 @@ function consolidate(wallet, signer){
 					ORDER BY amount LIMIT ?",
 					[arrAddresses, count_to_spend],
 					function(rows){
-						
+
 						// if all inputs are so small that they don't pay even for fees, add one more large input
 						function addLargeInputIfNecessary(onDone){
 							var target_amount = 1000 + TRANSFER_INPUT_SIZE*rows.length + AUTHOR_SIZE*arrAddresses.length;
@@ -109,7 +109,7 @@ function consolidate(wallet, signer){
 								}
 							);
 						}
-						
+
 						var assocUsedAddresses = {};
 						var assocUsedUnits = {};
 						var input_amount = 0;

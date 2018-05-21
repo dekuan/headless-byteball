@@ -10,8 +10,8 @@ exports.bLight		= false;
 exports.storage	= 'sqlite';
 
 
-exports.hub				= 'byteball.org/bb-test';
-exports.my_device_hub			= 'byteball.org/bb-test';
+exports.hub				= 'byteball.org/bb';
+exports.my_device_hub			= 'byteball.org/bb';
 exports.deviceName			= 'Headless';
 exports.permanent_pairing_secret	= 'randomstring';
 exports.control_addresses		= [ 'DEVICE ALLOWED TO CHAT' ];
