@@ -24,16 +24,21 @@ var xPrivKey;
 
 function replaceConsoleLog()
 {
-	var log_filename	= conf.LOG_FILENAME || ( appDataDir + '/log.txt' );
-	var writeStream		= fs.createWriteStream( log_filename );
+	let log_filename	= conf.LOG_FILENAME || ( appDataDir + '/log.txt' );
+	let writeStream		= fs.createWriteStream( log_filename );
 
+	//	...
 	console.log( '---------------' );
 	console.log( 'From this point, output will be redirected to ' + log_filename );
 	console.log( "To release the terminal, type Ctrl-Z, then 'bg'" );
 	console.log = function()
 	{
-		writeStream.write( Date().toString() + ': ' );
-		writeStream.write( util.format.apply( null, arguments ) + '\n' );
+		try {
+			writeStream.write( Date().toString() + ': ' );
+			writeStream.write( util.format.apply( null, arguments ) + '\n' );
+		}
+		catch (e) {
+		}
 	};
 	console.warn	= console.log;
 	console.info	= console.log;
