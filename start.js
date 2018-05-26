@@ -435,14 +435,19 @@ function sendPayment( asset, amount, to_address, change_address, device_address,
 	);
 }
 
-function sendMultiPayment(opts, onDone){
+function sendMultiPayment(opts, onDone)
+{
 	var device = require('byteballcore/device.js');
 	var Wallet = require('byteballcore/wallet.js');
+
 	if (!opts.paying_addresses)
 		opts.wallet = wallet_id;
+
 	opts.arrSigningDeviceAddresses = [device.getMyDeviceAddress()];
 	opts.signWithLocalPrivateKey = signWithLocalPrivateKey;
-	Wallet.sendMultiPayment(opts, (err, unit, assocMnemonics) => {
+
+	Wallet.sendMultiPayment( opts, ( err, unit, assocMnemonics ) =>
+	{
 		if (onDone)
 			onDone(err, unit, assocMnemonics);
 	});
@@ -864,7 +869,11 @@ setTimeout( function()
 					}
 
 					eventBus.emit( 'headless_wallet_ready' );
-					setTimeout( replaceConsoleLog, 1000 );
+					setTimeout
+					(
+						replaceConsoleLog,
+						1000
+					);
 
 					if ( conf.MAX_UNSPENT_OUTPUTS && conf.CONSOLIDATION_INTERVAL )
 					{
@@ -879,14 +888,44 @@ setTimeout( function()
 						};
 
 						//	...
-						setInterval( pfnConsolidate, conf.CONSOLIDATION_INTERVAL );
-						setTimeout( pfnConsolidate, 300 * 1000 );
+						setInterval
+						(
+							pfnConsolidate,
+							conf.CONSOLIDATION_INTERVAL
+						);
+						setTimeout
+						(
+							pfnConsolidate,
+							300 * 1000
+						);
 					}
 				}
 			);
 		});
 	});
 }, 1000 );
+
+
+
+//
+//	https://www.youtube.com/watch?v=gL2GGcV_f20
+//
+const m_oProfiler	= require( 'v8-profiler' );
+
+m_oProfiler.startProfiling( 'probe', true );
+
+
+setTimeout( function()
+{
+	const profile	= m_oProfiler.stopProfiling( 'probe' );
+	profile.export(function( error, result )
+	{
+		fs.writeFileSync( 'process.cpuprofile', result );
+		profile.delete();
+	});
+
+}, 10 * 60 * 1000 );
+
 
 
 
