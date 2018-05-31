@@ -7,7 +7,8 @@ exports.bServeAsHub	= false;
 exports.bLight		= false;
 
 
-exports.storage	= 'sqlite';
+exports.storage				= 'sqlite';
+exports.database.max_connections	= 10;
 
 
 exports.hub				= 'byteball.org/bb';

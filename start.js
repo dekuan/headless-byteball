@@ -129,10 +129,10 @@ function readKeys( onDone )
 		else
 		{
 			//	2nd or later start
-			rl.question
-			(
-				"Passphrase: ",
-				function( passphrase )
+			// rl.question
+			// (
+			// 	"Passphrase: ",
+				function mainEntrance( passphrase )
 				{
 					rl.close();
 					if ( process.stdout.moveCursor )
@@ -166,7 +166,9 @@ function readKeys( onDone )
 						}
 					});
 				}
-			);
+
+				mainEntrance();
+			//);
 		}
 	});
 }
