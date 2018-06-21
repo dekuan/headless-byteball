@@ -4,7 +4,7 @@
 //exports.port		= 6611;
 //exports.myUrl		= 'wss://mydomain.com/bb';
 exports.bServeAsHub	= false;
-exports.bLight		= true;
+exports.bLight		= false;
 
 
 //exports.storage	= 'sqlite';
@@ -12,15 +12,17 @@ exports.storage		= 'mysql';
 exports.database	=
 	{
 		host		: '127.0.0.1',
-		password	: "byteball",
 		name		: 'byteball',
-		user		: 'byteball'
+		user		: 'byteball',
+		password	: 'byteball'
 	};
 
 
 
-exports.hub				= 'byteball.org/bb-test';
-exports.my_device_hub			= 'byteball.org/bb-test';
+exports.hub				= 'byteball.org/bb';
+exports.my_device_hub			= 'byteball.org/bb';
+//exports.hub				= 'victor.trustnote.org/tn';
+//exports.my_device_hub			= 'victor.trustnote.org/tn';
 exports.deviceName			= 'Headless';
 exports.permanent_pairing_secret	= null;	//	'randomstring';
 exports.control_addresses		= [ 'DEVICE ALLOWED TO CHAT' ];
@@ -40,3 +42,4 @@ exports.rpcInterface			= '127.0.0.1';
 exports.rpcPort				= '6332';
 
 console.log('finished headless conf');
+
