@@ -898,7 +898,9 @@ setTimeout( function()
 							}
 						};
 
-						//	...
+						//
+						//	consolidate hourly
+						//
 						setInterval
 						(
 							pfnConsolidate,

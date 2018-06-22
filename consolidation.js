@@ -52,15 +52,23 @@ function readDestinationAddress(wallet, handleAddress){
 	});
 }
 
-function consolidate(wallet, signer){
+function consolidate( wallet, signer )
+{
 	var asset = null;
-	mutex.lock(['consolidate'], unlock => {
-		determineCountOfOutputs(asset, wallet, count => {
-			console.log(count+' unspent outputs');
-			if (count <= conf.MAX_UNSPENT_OUTPUTS)
-				return unlock();
-			let count_to_spend = Math.min(count - conf.MAX_UNSPENT_OUTPUTS + 1, constants.MAX_INPUTS_PER_PAYMENT_MESSAGE - 1);
-			readLeastFundedAddresses(asset, wallet, arrAddresses => {
+
+	mutex.lock( ['consolidate'], unlock => {
+		determineCountOfOutputs
+		(
+			asset,
+			wallet,
+			count => {
+				console.log(count+' unspent outputs');
+
+				if ( count <= conf.MAX_UNSPENT_OUTPUTS )
+					return unlock();
+				let count_to_spend = Math.min(count - conf.MAX_UNSPENT_OUTPUTS + 1, constants.MAX_INPUTS_PER_PAYMENT_MESSAGE - 1);
+				readLeastFundedAddresses( asset, wallet, arrAddresses => {
+
 				db.query(
 					"SELECT address, unit, message_index, output_index, amount \n\
 					FROM outputs \n\
@@ -76,7 +84,7 @@ function consolidate(wallet, signer){
 
 						// if all inputs are so small that they don't pay even for fees, add one more large input
 						function addLargeInputIfNecessary(onDone){
-							var target_amount = 1000 + TRANSFER_INPUT_SIZE*rows.length + AUTHOR_SIZE*arrAddresses.length;
+							var target_amount = 1000 + TRANSFER_INPUT_SIZE * rows.length + AUTHOR_SIZE * arrAddresses.length;
 							if (input_amount > target_amount)
 								return onDone();
 							target_amount += TRANSFER_INPUT_SIZE + AUTHOR_SIZE;
